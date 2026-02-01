@@ -1,0 +1,98 @@
+# ====================
+# MalVec .gitignore
+# ====================
+
+# ====================
+# Python
+# ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ====================
+# Virtual Environments
+# ====================
+venv/
+.venv/
+ENV/
+env/
+
+# ====================
+# IDE
+# ====================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ====================
+# Testing
+# ====================
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+
+# ====================
+# DATA - CRITICAL: Never commit samples!
+# ====================
+data/samples/
+data/embeddings/
+data/models/
+*.exe
+*.dll
+*.elf
+*.so
+*.bin
+
+# EMBER dataset (large files)
+ember2018/
+*.tar.bz2
+*.jsonl
+
+# ====================
+# Security: Never commit these
+# ====================
+*.pem
+*.key
+*.env
+.env
+secrets/
+credentials/
+
+# ====================
+# OS Files
+# ====================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ====================
+# Jupyter Notebooks (checkpoints)
+# ====================
+.ipynb_checkpoints/
+
+# ====================
+# Logs
+# ====================
+*.log
+logs/
