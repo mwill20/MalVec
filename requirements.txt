@@ -3,8 +3,10 @@
 
 # ====================
 # EMBER Dataset (Phase 2)
+# NOTE: EMBER is not on PyPI, install separately:
+#   pip install git+https://github.com/elastic/ember.git
 # ====================
-ember-ml>=0.1.0
+# ember installed from git (see above)
 
 # ====================
 # Embeddings (Phase 3)
