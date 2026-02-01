@@ -70,6 +70,18 @@
 
 ---
 
+## Lesson: Synthetic Data Fallback Pattern
+
+**Date:** 2026-02-01  
+**Context:** Testing EMBER loader without 7GB dataset download  
+**Problem:** Real EMBER data is 7GB - blocks development and CI  
+**Solution:** Implement layered fallback: Real data → EMBER library → Synthetic data  
+**Impact:** Tests pass immediately, new developers can start without dataset  
+**Trade-off:** Synthetic data won't catch data-specific bugs (need integration tests with real data)  
+**Takeaway:** Never block development on optional large assets. Provide fallbacks, but mark real-data tests clearly.
+
+---
+
 ## Template for Future Lessons
 
 ```markdown

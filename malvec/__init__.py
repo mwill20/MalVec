@@ -22,7 +22,11 @@ __author__ = "MalVec Team"
 # Lazy imports to avoid loading everything at once
 # Components will be imported as needed
 
+# Phase 2: EMBER loader
+from malvec import ember_loader
+
 __all__ = [
     "__version__",
     "__author__",
+    "ember_loader",
 ]

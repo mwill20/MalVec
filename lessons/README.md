@@ -14,7 +14,7 @@
 | # | Lesson | Phase | Status |
 |---|--------|-------|--------|
 | 01 | [Project Foundation](novice/lesson_01_project_foundation.md) | 1 | ✅ Complete |
-| 02 | EMBER Dataset Integration | 2 | 🔄 In Progress |
+| 02 | [EMBER Dataset Integration](novice/lesson_02_ember_integration.md) | 2 | ✅ Complete |
 | 03 | Feature Vector Exploration | 2 | ⏳ Planned |
 | 04 | Embedding Generation | 3 | ⏳ Planned |
 | 05 | Semantic Similarity | 3 | ⏳ Planned |
@@ -37,7 +37,7 @@
 | # | Lesson | Phase | Status |
 |---|--------|-------|--------|
 | 01 | [Production Architecture](professional/lesson_01_production_architecture.md) | 1 | ✅ Complete |
-| 02 | EMBER Integration & Feature Engineering | 2 | 🔄 In Progress |
+| 02 | [EMBER Integration & Feature Engineering](professional/lesson_02_ember_feature_engineering.md) | 2 | ✅ Complete |
 | 03 | Feature Pipeline Design | 2 | ⏳ Planned |
 | 04 | Embedding Model Selection | 3 | ⏳ Planned |
 | 05 | Embedding Optimization | 3 | ⏳ Planned |
