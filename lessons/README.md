@@ -16,9 +16,9 @@
 | 01 | [Project Foundation](novice/lesson_01_project_foundation.md) | 1 | ✅ Complete |
 | 02 | [EMBER Dataset Integration](novice/lesson_02_ember_integration.md) | 2 | ✅ Complete |
 | 03 | [Embedding Generation](novice/lesson_03_embedding_generation.md) | 3 | ✅ Complete |
-| 04 | Semantic Similarity | 3 | ⏳ Planned |
-| 05 | Vector Database Basics | 4 | ⏳ Planned |
-| 06 | K-NN Search | 4 | ⏳ Planned |
+| 04 | [Vector Database Basics](novice/lesson_04_vector_database.md) | 4 | ✅ Complete |
+| 05 | K-NN Search | 4 | ⏳ Planned |
+| 06 | Classification Logic | 5 | ⏳ Planned |
 | 08 | Classification Logic | 5 | ⏳ Planned |
 | 09 | Confidence Scoring | 5 | ⏳ Planned |
 | 10 | CLI Development | 6 | ⏳ Planned |
@@ -38,10 +38,10 @@
 | 01 | [Production Architecture](professional/lesson_01_production_architecture.md) | 1 | ✅ Complete |
 | 02 | [EMBER Integration & Feature Engineering](professional/lesson_02_ember_feature_engineering.md) | 2 | ✅ Complete |
 | 03 | [Embedding Model Selection & Architecture](professional/lesson_03_embedding_architecture.md) | 3 | ✅ Complete |
-| 04 | Embedding Optimization | 3 | ⏳ Planned |
-| 05 | Vector Storage Architecture | 4 | ⏳ Planned |
-| 06 | FAISS at Scale | 4 | ⏳ Planned |
-| 07 | Classification Algorithms | 5 | ⏳ Planned |
+| 04 | [Vector Storage Architecture](professional/lesson_04_vector_storage.md) | 4 | ✅ Complete |
+| 05 | FAISS at Scale | 4 | ⏳ Planned |
+| 06 | Classification Algorithms | 5 | ⏳ Planned |
+| 07 | Confidence Calibration | 5 | ⏳ Planned |
 | 09 | Confidence Calibration | 5 | ⏳ Planned |
 | 10 | CLI UX Design | 6 | ⏳ Planned |
 | 11 | Training Pipeline Optimization | 6 | ⏳ Planned |

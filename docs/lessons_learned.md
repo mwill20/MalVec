@@ -148,6 +148,38 @@
 
 ---
 
+## Meta-Lesson: Fast Iteration Beats Perfect Planning
+
+**Date:** 2026-02-01  
+**Context:** Phase 3 text bridge was fundamentally broken  
+**What Happened:**
+
+1. Phase 3 v1 shipped with text bridge (Spearman ~0.30)
+2. Review caught it immediately
+3. Phase 3 v2 shipped with sklearn (Spearman >0.98)
+
+**Key Insight:** The revision (100 lines, battle-tested sklearn) is **superior**
+to what we would have built if we'd overthought it initially.
+
+**Why This Works:**
+
+- Fast iteration with honest feedback beats trying to get it perfect first time
+- Empirical validation (distance correlation) caught what code review missed
+- Using standard libraries (sklearn) beats custom implementations
+- Simpler is almost always better
+
+**The Numbers:**
+
+| Metric | v1 (broken) | v2 (fixed) |
+|--------|-------------|------------|
+| Features used | 48/384 (12%) | 2381/2381 (100%) |
+| Spearman | ~0.30 | >0.98 |
+| Lines | ~200 | ~100 |
+
+**Takeaway:** Ship, measure, learn, improve. The loop is more valuable than the plan.
+
+---
+
 ## Template for Future Lessons
 
 ```markdown

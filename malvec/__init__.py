@@ -28,10 +28,14 @@ from malvec import ember_loader
 # Phase 3: Embedding generator
 from malvec import embedder
 
+# Phase 4: Vector storage
+from malvec import vector_store
+
 __all__ = [
     "__version__",
     "__author__",
     "ember_loader",
     "embedder",
+    "vector_store",
 ]
 
