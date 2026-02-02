@@ -18,7 +18,7 @@
 | 03 | [Embedding Generation](novice/lesson_03_embedding_generation.md) | 3 | ✅ Complete |
 | 04 | [Vector Database Basics](novice/lesson_04_vector_database.md) | 4 | ✅ Complete |
 | 05 | [K-NN Classification](novice/lesson_05_knn_classification.md) | 5 | ✅ Complete |
-| 06 | CLI Development | 6 | ⏳ Planned |
+| 06 | [CLI Usage](novice/lesson_06_cli_usage.md) | 6 | ✅ Complete |
 | 07 | Training Pipeline | 6 | ⏳ Planned |
 | 08 | Input Validation | 7 | ⏳ Planned |
 | 09 | Static Analysis | 7 | ⏳ Planned |
@@ -37,7 +37,7 @@
 | 03 | [Embedding Model Selection & Architecture](professional/lesson_03_embedding_architecture.md) | 3 | ✅ Complete |
 | 04 | [Vector Storage Architecture](professional/lesson_04_vector_storage.md) | 4 | ✅ Complete |
 | 05 | [Classification Algorithms](professional/lesson_05_classification.md) | 5 | ✅ Complete |
-| 06 | CLI UX Design | 6 | ⏳ Planned |
+| 06 | [CLI Architecture](professional/lesson_06_cli_architecture.md) | 6 | ✅ Complete |
 | 07 | Training Pipeline Optimization | 6 | ⏳ Planned |
 | 08 | Input Validation Hardening | 7 | ⏳ Planned |
 | 09 | PE/ELF Analysis | 7 | ⏳ Planned |
