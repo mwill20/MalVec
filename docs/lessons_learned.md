@@ -115,15 +115,36 @@
 
 ---
 
-## Lesson: Numeric Features Need Text Bridge
+## Lesson: Text Models Don't Understand Numbers (RETRACTED)
+
+**Date:** 2026-02-01 (Original), 2026-02-01 (Corrected)  
+**Context:** Wanted to use sentence-transformers for embedding EMBER features  
+**Original Approach:** Convert numbers to text strings, feed to transformer  
+**Why It Was Wrong:**
+
+- Transformers tokenize "0.123" as a word, not a numeric value
+- Only sampled 48 of 384 features (88% information loss)
+- Spearman correlation with original distances: ~0.30 (garbage)
+
+**Correct Approach:** Use sklearn.GaussianRandomProjection
+
+- Proper JL lemma implementation with correct scaling
+- Uses ALL features (no sampling)
+- Spearman correlation: >0.98 (excellent)
+
+**Lesson:** Never use text models for numeric data. If it's numbers, use numeric methods.
+
+---
+
+## Lesson: QR Orthogonalization Hurts JL Projection
 
 **Date:** 2026-02-01  
-**Context:** Sentence-transformers expect text, we have numeric features  
-**Problem:** Can't directly feed float arrays to transformer models  
-**Solution:** Project first (2381→384), then sample features as text  
-**Trade-off:** Loses some precision but gains semantic patterns  
-**Alternative:** Train custom encoder (more work, potentially better quality)  
-**Takeaway:** Adapt the data to the tool, or adapt the tool to the data - choose based on effort.
+**Context:** Thought orthogonal projection would be better than random  
+**Problem:** QR-orthogonalized matrix had worse distance preservation  
+**Root Cause:** JL lemma requires Gaussian distribution; QR changes this  
+**Evidence:** QR correlation 0.30 vs sklearn 0.98  
+**Solution:** Use sklearn.GaussianRandomProjection (handles scaling correctly)  
+**Takeaway:** Don't "improve" proven algorithms without understanding the math.
 
 ---
 

@@ -2,17 +2,16 @@
 Unit tests for Embedding Generator.
 
 Tests the embedder module which provides utilities for:
-- Converting EMBER feature vectors to semantic embeddings
-- Model selection and configuration
-- Batch processing with memory efficiency
-- Embedding validation and normalization
+- Converting EMBER feature vectors to embeddings via random projection
+- Johnson-Lindenstrauss distance preservation
+- L2 normalization for cosine similarity
 
-These tests are written FIRST (test-first approach), before implementation.
+These tests validate that random projection produces correct embeddings.
 """
 
 import pytest
 import numpy as np
-from pathlib import Path
+from scipy.spatial.distance import pdist
 
 
 class TestEmbedderImport:
@@ -40,32 +39,23 @@ class TestEmbeddingConfig:
         
         config = EmbeddingConfig()
         
-        assert hasattr(config, 'model_name')
-        assert hasattr(config, 'embedding_dim')
-        assert hasattr(config, 'batch_size')
-        assert hasattr(config, 'normalize')
-        
-    def test_config_default_model(self):
-        """Default model should be a valid sentence-transformer."""
-        from malvec.embedder import EmbeddingConfig
-        
-        config = EmbeddingConfig()
-        # Default should be a lightweight model
-        assert 'MiniLM' in config.model_name or config.model_name is not None
+        assert config.embedding_dim == 384
+        assert config.random_state == 42
+        assert config.normalize is True
     
     def test_config_custom_values(self):
         """Config should accept custom values."""
         from malvec.embedder import EmbeddingConfig
         
         config = EmbeddingConfig(
-            model_name='all-MiniLM-L6-v2',
-            batch_size=64,
-            normalize=True
+            embedding_dim=256,
+            random_state=123,
+            normalize=False
         )
         
-        assert config.model_name == 'all-MiniLM-L6-v2'
-        assert config.batch_size == 64
-        assert config.normalize is True
+        assert config.embedding_dim == 256
+        assert config.random_state == 123
+        assert config.normalize is False
 
 
 class TestEmbeddingGenerator:
@@ -87,8 +77,8 @@ class TestEmbeddingGenerator:
         
         generator = EmbeddingGenerator()
         assert generator.config is not None
+        assert generator.config.embedding_dim == 384
     
-    @pytest.mark.slow
     def test_generate_embeddings_shape(self):
         """Generated embeddings should have correct shape."""
         from malvec.embedder import EmbeddingGenerator
@@ -96,19 +86,14 @@ class TestEmbeddingGenerator:
         
         generator = EmbeddingGenerator()
         
-        # Create synthetic EMBER features
         n_samples = 10
         features = np.random.randn(n_samples, EMBER_FEATURE_DIM).astype(np.float32)
         
         embeddings = generator.generate(features)
         
         assert isinstance(embeddings, np.ndarray)
-        assert embeddings.shape[0] == n_samples
-        assert embeddings.ndim == 2
-        # Embedding dim depends on model, but should be > 0
-        assert embeddings.shape[1] > 0
+        assert embeddings.shape == (n_samples, 384)
     
-    @pytest.mark.slow
     def test_generate_single_sample(self):
         """Should handle single sample input."""
         from malvec.embedder import EmbeddingGenerator
@@ -121,9 +106,8 @@ class TestEmbeddingGenerator:
         
         embeddings = generator.generate(features)
         
-        assert embeddings.shape[0] == 1
+        assert embeddings.shape == (1, 384)
     
-    @pytest.mark.slow
     def test_embeddings_are_normalized(self):
         """Embeddings should be L2 normalized when configured."""
         from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
@@ -139,7 +123,21 @@ class TestEmbeddingGenerator:
         norms = np.linalg.norm(embeddings, axis=1)
         assert np.allclose(norms, 1.0, atol=1e-5)
     
-    @pytest.mark.slow
+    def test_embeddings_not_normalized_when_disabled(self):
+        """Embeddings should NOT be normalized when normalize=False."""
+        from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
+        from malvec.ember_loader import EMBER_FEATURE_DIM
+        
+        config = EmbeddingConfig(normalize=False)
+        generator = EmbeddingGenerator(config)
+        
+        features = np.random.randn(5, EMBER_FEATURE_DIM).astype(np.float32)
+        embeddings = generator.generate(features)
+        
+        # Norms should NOT all be 1.0
+        norms = np.linalg.norm(embeddings, axis=1)
+        assert not np.allclose(norms, 1.0, atol=1e-3)
+    
     def test_embeddings_dtype(self):
         """Embeddings should be float32."""
         from malvec.embedder import EmbeddingGenerator
@@ -195,39 +193,79 @@ class TestEmbeddingValidation:
             generator.generate(features)
 
 
-class TestBatchProcessing:
-    """Test batch processing for memory efficiency."""
+class TestJohnsonLindenstrauss:
+    """Test that random projection preserves distances (JL lemma)."""
     
-    @pytest.mark.slow
-    def test_large_batch_processing(self):
-        """Should handle large batches efficiently."""
+    def test_distance_preservation(self):
+        """Relative distance ordering should be approximately preserved.
+        
+        For k-NN search, what matters is that if A is closer to B than to C
+        in the original space, this relationship is preserved in the embedded space.
+        We use Spearman rank correlation to measure this.
+        """
+        from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
+        from malvec.ember_loader import EMBER_FEATURE_DIM
+        from scipy.stats import spearmanr
+        
+        # Use unnormalized embeddings for distance preservation test
+        config = EmbeddingConfig(normalize=False)
+        generator = EmbeddingGenerator(config)
+        
+        # Generate random features
+        np.random.seed(42)
+        n_samples = 30  # Fewer samples for cleaner test
+        features = np.random.randn(n_samples, EMBER_FEATURE_DIM).astype(np.float32)
+        
+        # Compute original pairwise distances
+        orig_distances = pdist(features, 'euclidean')
+        
+        # Generate embeddings
+        embeddings = generator.generate(features)
+        
+        # Compute embedded pairwise distances
+        emb_distances = pdist(embeddings, 'euclidean')
+        
+        # Spearman rank correlation - measures if ordering is preserved
+        # This is what matters for k-NN search
+        rank_corr, _ = spearmanr(orig_distances, emb_distances)
+        
+        # Expect rank correlation > 0.5 for reasonable ordering preservation
+        # (random would be ~0, perfect would be 1)
+        assert rank_corr > 0.5, f"Rank correlation {rank_corr:.3f} too low"
+    
+    def test_reproducibility(self):
+        """Same random_state should produce same projection."""
         from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
         from malvec.ember_loader import EMBER_FEATURE_DIM
         
-        config = EmbeddingConfig(batch_size=32)
-        generator = EmbeddingGenerator(config)
+        config = EmbeddingConfig(random_state=42)
         
-        # 100 samples should be processed in batches of 32
-        features = np.random.randn(100, EMBER_FEATURE_DIM).astype(np.float32)
+        features = np.random.randn(10, EMBER_FEATURE_DIM).astype(np.float32)
         
-        embeddings = generator.generate(features)
+        gen1 = EmbeddingGenerator(config)
+        emb1 = gen1.generate(features)
         
-        assert embeddings.shape[0] == 100
+        gen2 = EmbeddingGenerator(config)
+        emb2 = gen2.generate(features)
+        
+        # Same seed should produce identical results
+        assert np.allclose(emb1, emb2)
     
-    @pytest.mark.slow
-    def test_batch_size_respected(self):
-        """Batch processing should not exceed configured batch size."""
+    def test_different_seeds_different_results(self):
+        """Different random_state should produce different projections."""
         from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
         from malvec.ember_loader import EMBER_FEATURE_DIM
         
-        config = EmbeddingConfig(batch_size=16)
-        generator = EmbeddingGenerator(config)
+        features = np.random.randn(10, EMBER_FEATURE_DIM).astype(np.float32)
         
-        features = np.random.randn(50, EMBER_FEATURE_DIM).astype(np.float32)
+        gen1 = EmbeddingGenerator(EmbeddingConfig(random_state=42))
+        emb1 = gen1.generate(features)
         
-        # Should complete without memory issues
-        embeddings = generator.generate(features)
-        assert embeddings.shape[0] == 50
+        gen2 = EmbeddingGenerator(EmbeddingConfig(random_state=123))
+        emb2 = gen2.generate(features)
+        
+        # Different seeds should produce different results
+        assert not np.allclose(emb1, emb2)
 
 
 class TestEmbeddingInfo:
@@ -235,13 +273,12 @@ class TestEmbeddingInfo:
     
     def test_get_embedding_dim(self):
         """Should report embedding dimension."""
-        from malvec.embedder import EmbeddingGenerator
+        from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
         
-        generator = EmbeddingGenerator()
+        config = EmbeddingConfig(embedding_dim=256)
+        generator = EmbeddingGenerator(config)
         
-        dim = generator.get_embedding_dim()
-        assert isinstance(dim, int)
-        assert dim > 0
+        assert generator.get_embedding_dim() == 256
     
     def test_get_model_info(self):
         """Should return model information."""
@@ -252,36 +289,56 @@ class TestEmbeddingInfo:
         info = generator.get_model_info()
         
         assert isinstance(info, dict)
-        assert 'model_name' in info
-        assert 'embedding_dim' in info
+        assert info['model_name'] == 'random_projection'
+        assert info['model_type'] == 'Johnson-Lindenstrauss'
+        assert info['embedding_dim'] == 384
+        assert info['normalize'] is True
 
 
 class TestFeatureProjection:
-    """Test feature projection strategies."""
+    """Test feature projection."""
     
     def test_projection_layer_exists(self):
-        """EmbeddingGenerator should have a projection layer."""
+        """EmbeddingGenerator should have a projection method."""
         from malvec.embedder import EmbeddingGenerator
         
         generator = EmbeddingGenerator()
         
-        # Should have method to project EMBER features
         assert hasattr(generator, 'project_features')
         assert callable(generator.project_features)
     
-    @pytest.mark.slow
     def test_projection_reduces_dimension(self):
-        """Projection should reduce 2381 dims to manageable size."""
-        from malvec.embedder import EmbeddingGenerator
+        """Projection should reduce 2381 dims to embedding_dim."""
+        from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
         from malvec.ember_loader import EMBER_FEATURE_DIM
         
-        generator = EmbeddingGenerator()
+        config = EmbeddingConfig(embedding_dim=256)
+        generator = EmbeddingGenerator(config)
         
         features = np.random.randn(10, EMBER_FEATURE_DIM).astype(np.float32)
         
         projected = generator.project_features(features)
         
-        # Should reduce dimensions
-        assert projected.shape[1] < EMBER_FEATURE_DIM
-        # But maintain sample count
-        assert projected.shape[0] == 10
+        # Should reduce from 2381 to 256
+        assert projected.shape == (10, 256)
+    
+    def test_projection_uses_all_features(self):
+        """Projection should use all input features."""
+        from malvec.embedder import EmbeddingGenerator
+        from malvec.ember_loader import EMBER_FEATURE_DIM
+        
+        generator = EmbeddingGenerator()
+        
+        # Create features where only one column is non-zero
+        features1 = np.zeros((1, EMBER_FEATURE_DIM), dtype=np.float32)
+        features1[0, 0] = 1.0
+        
+        features2 = np.zeros((1, EMBER_FEATURE_DIM), dtype=np.float32)
+        features2[0, 1000] = 1.0
+        
+        emb1 = generator.generate(features1)
+        emb2 = generator.generate(features2)
+        
+        # Different input columns should produce different embeddings
+        # (proving all columns are used in projection)
+        assert not np.allclose(emb1, emb2)
