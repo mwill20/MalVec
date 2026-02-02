@@ -180,6 +180,39 @@ to what we would have built if we'd overthought it initially.
 
 ---
 
+## Lesson: Separation of Concerns in ML Pipelines
+
+**Date:** 2026-02-01  
+**Context:** Deciding where to store classification labels (VectorIndex vs KNNClassifier)  
+**Options Considered:**
+
+1. Add metadata to VectorIndex
+2. Parallel label array in KNNClassifier (chosen)
+3. DataFrame sidecar
+
+**Decision:** Option 2 - Parallel label array in classifier
+
+**Rationale:**
+
+- VectorIndex = vector operations only (Single Responsibility)
+- KNNClassifier = classification logic only
+- Parallel array enables composability (use index for clustering, deduplication)
+- Simpler testing (test search and classification independently)
+
+**Evidence:** E2E test proved the design works:
+
+```
+Query sample 42 (malware):
+  Rank 1: idx=42, label=malware, similarity=1.0000
+  Rank 2: idx=16, label=malware, similarity=0.1446
+  Rank 3: idx=71, label=malware, similarity=0.1398
+  Label agreement: 3/5 = majority vote works
+```
+
+**Takeaway:** Resist adding "just one more feature." The simplest correct abstraction is usually right.
+
+---
+
 ## Template for Future Lessons
 
 ```markdown
