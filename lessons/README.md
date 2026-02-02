@@ -17,17 +17,14 @@
 | 02 | [EMBER Dataset Integration](novice/lesson_02_ember_integration.md) | 2 | ✅ Complete |
 | 03 | [Embedding Generation](novice/lesson_03_embedding_generation.md) | 3 | ✅ Complete |
 | 04 | [Vector Database Basics](novice/lesson_04_vector_database.md) | 4 | ✅ Complete |
-| 05 | K-NN Search | 4 | ⏳ Planned |
-| 06 | Classification Logic | 5 | ⏳ Planned |
-| 08 | Classification Logic | 5 | ⏳ Planned |
-| 09 | Confidence Scoring | 5 | ⏳ Planned |
-| 10 | CLI Development | 6 | ⏳ Planned |
-| 11 | Training Pipeline | 6 | ⏳ Planned |
-| 12 | Input Validation | 7 | ⏳ Planned |
-| 13 | Static Analysis | 7 | ⏳ Planned |
-| 14 | Defense in Depth | 8 | ⏳ Planned |
-| 15 | Testing Strategies | 9 | ⏳ Planned |
-| 16 | Deployment Basics | 9 | ⏳ Planned |
+| 05 | [K-NN Classification](novice/lesson_05_knn_classification.md) | 5 | ✅ Complete |
+| 06 | CLI Development | 6 | ⏳ Planned |
+| 07 | Training Pipeline | 6 | ⏳ Planned |
+| 08 | Input Validation | 7 | ⏳ Planned |
+| 09 | Static Analysis | 7 | ⏳ Planned |
+| 10 | Defense in Depth | 8 | ⏳ Planned |
+| 11 | Testing Strategies | 9 | ⏳ Planned |
+| 12 | Deployment Basics | 9 | ⏳ Planned |
 
 ### Professional Track (22 Lessons)
 
@@ -39,20 +36,17 @@
 | 02 | [EMBER Integration & Feature Engineering](professional/lesson_02_ember_feature_engineering.md) | 2 | ✅ Complete |
 | 03 | [Embedding Model Selection & Architecture](professional/lesson_03_embedding_architecture.md) | 3 | ✅ Complete |
 | 04 | [Vector Storage Architecture](professional/lesson_04_vector_storage.md) | 4 | ✅ Complete |
-| 05 | FAISS at Scale | 4 | ⏳ Planned |
-| 06 | Classification Algorithms | 5 | ⏳ Planned |
-| 07 | Confidence Calibration | 5 | ⏳ Planned |
-| 09 | Confidence Calibration | 5 | ⏳ Planned |
-| 10 | CLI UX Design | 6 | ⏳ Planned |
-| 11 | Training Pipeline Optimization | 6 | ⏳ Planned |
-| 12 | Input Validation Hardening | 7 | ⏳ Planned |
-| 13 | PE/ELF Analysis | 7 | ⏳ Planned |
-| 14 | Sandbox Architecture | 8 | ⏳ Planned |
-| 15 | Defense in Depth | 8 | ⏳ Planned |
-| 16 | Unit Testing Security Tools | 9 | ⏳ Planned |
-| 17 | Integration Testing | 9 | ⏳ Planned |
-| 18 | E2E Testing | 9 | ⏳ Planned |
-| 19 | Performance Tuning | 9 | ⏳ Planned |
+| 05 | [Classification Algorithms](professional/lesson_05_classification.md) | 5 | ✅ Complete |
+| 06 | CLI UX Design | 6 | ⏳ Planned |
+| 07 | Training Pipeline Optimization | 6 | ⏳ Planned |
+| 08 | Input Validation Hardening | 7 | ⏳ Planned |
+| 09 | PE/ELF Analysis | 7 | ⏳ Planned |
+| 10 | Sandbox Architecture | 8 | ⏳ Planned |
+| 11 | Defense in Depth | 8 | ⏳ Planned |
+| 12 | Unit Testing Security Tools | 9 | ⏳ Planned |
+| 13 | Integration Testing | 9 | ⏳ Planned |
+| 14 | E2E Testing | 9 | ⏳ Planned |
+| 15 | Performance Tuning | 9 | ⏳ Planned |
 | 20 | Deployment Patterns | 9 | ⏳ Planned |
 | 21 | Monitoring & Alerting | 9 | ⏳ Planned |
 | 22 | Incident Response | 9 | ⏳ Planned |

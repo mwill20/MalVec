@@ -31,11 +31,15 @@ from malvec import embedder
 # Phase 4: Vector storage
 from malvec import vector_store
 
+# Phase 5: K-NN Classifier
+from malvec import classifier
+
 __all__ = [
     "__version__",
     "__author__",
     "ember_loader",
     "embedder",
     "vector_store",
+    "classifier",
 ]
 
