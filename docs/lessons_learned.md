@@ -213,6 +213,40 @@ Query sample 42 (malware):
 
 ---
 
+## Lesson 8: Expected Performance with Random Data
+
+**Date:** 2026-02-01  
+**Context:** Phase 5 accuracy verification (68.8% on synthetic data)  
+**Problem:** Training accuracy seemed low for K-NN  
+
+**Analysis:**
+
+- K-NN with k=5, self-match guarantees 1 correct vote
+- Other 4 neighbors vote with ~50% accuracy on random labels
+- Need 3/5 majority = self + ≥2 of 4 random neighbors
+- P(≥2 of 4) = binomial CDF = 0.6875
+
+**Finding:**
+
+| Metric | Expected | Observed |
+|--------|----------|----------|
+| Accuracy | 68.75% | 68.80% |
+| Neighbor agreement | 2.0/4 | 2.01/4 |
+
+EXACT MATCH - implementation is correct.
+
+**Evidence:**
+
+```python
+from scipy.stats import binom
+prob = 1 - binom.cdf(1, 4, 0.5)  # P(≥2 of 4)
+# = 0.6875 = 68.75%
+```
+
+**Takeaway:** When debugging ML systems, calculate mathematical expectations first. If observed matches expected, implementation is correct - the data is the issue. Hypothesis-driven debugging beats trial-and-error every time.
+
+---
+
 ## Template for Future Lessons
 
 ```markdown
