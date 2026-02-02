@@ -137,12 +137,13 @@ def main():
     from malvec.ember_loader import load_ember_features
     from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
     
+    # Validate sample index against model's training data
+    if args.sample_index >= meta['n_samples']:
+        print(f"Error: Sample index {args.sample_index} out of range (model has {meta['n_samples']} samples)", file=sys.stderr)
+        return 1
+    
     # Load the specific sample
     X, y = load_ember_features(max_samples=args.sample_index + 1)
-    
-    if args.sample_index >= len(X):
-        print(f"Error: Sample index {args.sample_index} out of range", file=sys.stderr)
-        return 1
     
     sample = X[args.sample_index:args.sample_index + 1]
     true_label = y[args.sample_index]

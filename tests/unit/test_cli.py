@@ -261,3 +261,40 @@ class TestCLIErrors:
         )
         
         assert result.returncode != 0
+    
+    def test_classify_sample_out_of_range(self):
+        """Should error when sample index exceeds model size."""
+        import shutil
+        tmpdir = tempfile.mkdtemp()
+        
+        try:
+            # Train a small model (100 samples)
+            result = subprocess.run(
+                [
+                    sys.executable, '-m', 'malvec.cli.train',
+                    '--output', tmpdir,
+                    '--max-samples', '100',
+                ],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            )
+            assert result.returncode == 0
+            
+            # Try to classify sample 9999 (out of range)
+            result = subprocess.run(
+                [
+                    sys.executable, '-m', 'malvec.cli.classify',
+                    '--model', tmpdir,
+                    '--sample-index', '9999',
+                ],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            )
+            
+            # Should fail with clear error
+            assert result.returncode != 0
+            assert 'out of range' in result.stderr.lower()
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
