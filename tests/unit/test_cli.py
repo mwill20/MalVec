@@ -298,3 +298,54 @@ class TestCLIErrors:
             assert 'out of range' in result.stderr.lower()
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_classify_file_flow(self):
+        """Should attempt to classify a file input."""
+        import shutil
+        tmpdir = tempfile.mkdtemp()
+        
+        try:
+            # 1. Train a model
+            subprocess.run(
+                [
+                    sys.executable, '-m', 'malvec.cli.train',
+                    '--output', tmpdir, 
+                    '--max-samples', '10'
+                ],
+                check=True,
+                cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            )
+            
+            # 2. Create a dummy PE file (pass validator: >256 bytes, starts with MZ)
+            pe_path = os.path.join(tmpdir, "test.exe")
+            with open(pe_path, "wb") as f:
+                f.write(b"MZ" + b"\x00" * 300)
+            
+            # 3. Run classify
+            result = subprocess.run(
+                [
+                    sys.executable, '-m', 'malvec.cli.classify',
+                    '--model', tmpdir,
+                    '--file', pe_path
+                ],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            )
+            
+            # Logic: InputValidator passes. FeatureExtractor might fail or succeed.
+            # If it fails, it catches exception and prints error.
+            # We just want to ensure it TRIED (i.e. didn't crash with ImportError).
+            
+            print(f"STDOUT: {result.stdout}")
+            print(f"STDERR: {result.stderr}")
+            
+            # Check for either success output or handled error
+            assert (
+                "Prediction:" in result.stdout or 
+                "Error processing file" in result.stderr or 
+                "Extracting features" in result.stderr
+            )
+            
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)

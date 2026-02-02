@@ -43,11 +43,17 @@ Examples:
         help='Path to model directory'
     )
     
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         '--sample-index', '-i',
         type=int,
-        required=True,
         help='Index of sample to classify (from EMBER dataset)'
+    )
+    
+    group.add_argument(
+        '--file', '-f',
+        type=str,
+        help='Path to PE file to classify'
     )
     
     parser.add_argument(
@@ -133,28 +139,56 @@ def main():
         print(f"Error: {e}", file=sys.stderr)
         return 1
     
-    # Load sample
-    from malvec.ember_loader import load_ember_features
     from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
     
-    # Validate sample index against model's training data
-    if args.sample_index >= meta['n_samples']:
-        print(f"Error: Sample index {args.sample_index} out of range (model has {meta['n_samples']} samples)", file=sys.stderr)
-        return 1
+    embedding = None
+    true_label = None
+    sample_identifier = None
     
-    # Load the specific sample
-    X, y = load_ember_features(max_samples=args.sample_index + 1)
-    
-    sample = X[args.sample_index:args.sample_index + 1]
-    true_label = y[args.sample_index]
-    
-    # Generate embedding
-    config = EmbeddingConfig(
-        embedding_dim=meta['embedding_dim'],
-        normalize=True
-    )
-    generator = EmbeddingGenerator(config)
-    embedding = generator.generate(sample)
+    # CASE 1: Real File Classification
+    if args.file:
+        from malvec.validator import InputValidator
+        from malvec.features import FeatureExtractor
+        
+        sample_identifier = args.file
+        try:
+            # Validate
+            file_path = InputValidator.validate(args.file)
+            
+            # Extract
+            print(f"Extracting features from {file_path.name}...", file=sys.stderr)
+            extractor = FeatureExtractor()
+            raw_features = extractor.extract(file_path)
+            
+            # Embed
+            config = EmbeddingConfig(embedding_dim=meta['embedding_dim'], normalize=True)
+            generator = EmbeddingGenerator(config)
+            embedding = generator.generate(raw_features)
+            
+        except Exception as e:
+            print(f"Error processing file: {e}", file=sys.stderr)
+            return 1
+
+    # CASE 2: Synthetic Sample (Demo/Test)
+    elif args.sample_index is not None:
+        from malvec.ember_loader import load_ember_features
+        
+        sample_identifier = f"Index {args.sample_index}"
+        
+        # Validate sample index against model's training data
+        if args.sample_index >= meta['n_samples']:
+            print(f"Error: Sample index {args.sample_index} out of range (model has {meta['n_samples']} samples)", file=sys.stderr)
+            return 1
+        
+        # Load the specific sample
+        X, y = load_ember_features(max_samples=args.sample_index + 1)
+        sample = X[args.sample_index:args.sample_index + 1]
+        true_label = y[args.sample_index]
+        
+        # Generate embedding
+        config = EmbeddingConfig(embedding_dim=meta['embedding_dim'], normalize=True)
+        generator = EmbeddingGenerator(config)
+        embedding = generator.generate(sample)
     
     # Override k if specified
     if args.k:
@@ -169,14 +203,16 @@ def main():
     
     # Prepare output
     output = {
-        'sample_index': args.sample_index,
+        'sample': sample_identifier,
         'prediction': 'malware' if prediction == 1 else 'benign',
         'prediction_code': int(prediction),
         'confidence': float(confidence),
         'needs_review': bool(needs_review),
-        'true_label': 'malware' if true_label == 1 else 'benign',
-        'correct': prediction == true_label,
     }
+    
+    if true_label is not None:
+        output['true_label'] = 'malware' if true_label == 1 else 'benign'
+        output['correct'] = (prediction == true_label)
     
     # Get neighbors if requested
     if args.show_neighbors:
@@ -201,15 +237,17 @@ def main():
         label_str = 'MALWARE' if prediction == 1 else 'BENIGN'
         review_str = '[!] NEEDS REVIEW' if needs_review else '[OK] AUTO-CLASSIFIED'
         
-        print(f"Sample #{args.sample_index}")
+        print(f"Sample: {sample_identifier}")
         print(f"Prediction: {label_str}")
         
         if args.show_confidence:
             print(f"Confidence: {confidence:.0%}")
         
         print(f"Status: {review_str}")
-        print(f"True Label: {'malware' if true_label == 1 else 'benign'}")
-        print(f"Correct: {'YES' if output['correct'] else 'NO'}")
+        
+        if true_label is not None:
+            print(f"True Label: {'malware' if true_label == 1 else 'benign'}")
+            print(f"Correct: {'YES' if output['correct'] else 'NO'}")
         
         if args.show_neighbors:
             print(f"\nNearest Neighbors (k={len(output['neighbors'])}):")
