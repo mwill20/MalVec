@@ -148,7 +148,7 @@ def main():
     # CASE 1: Real File Classification
     if args.file:
         from malvec.validator import InputValidator
-        from malvec.features import FeatureExtractor
+        from malvec.extractor import FeatureExtractor
         
         sample_identifier = args.file
         try:
@@ -158,7 +158,7 @@ def main():
             # Extract
             print(f"Extracting features from {file_path.name}...", file=sys.stderr)
             extractor = FeatureExtractor()
-            raw_features = extractor.extract(file_path)
+            raw_features = extractor.extract(file_path) # Returns np.array(2381,)
             
             # Embed
             config = EmbeddingConfig(embedding_dim=meta['embedding_dim'], normalize=True)
@@ -167,6 +167,8 @@ def main():
             
         except Exception as e:
             print(f"Error processing file: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
             return 1
 
     # CASE 2: Synthetic Sample (Demo/Test)
