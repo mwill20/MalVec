@@ -52,6 +52,28 @@ class TestCLIHelp:
         )
         assert result.returncode == 0
         assert 'usage' in result.stdout.lower() or 'info' in result.stdout.lower()
+    
+    def test_evaluate_help(self):
+        """evaluate.py should have help documentation."""
+        result = subprocess.run(
+            [sys.executable, '-m', 'malvec.cli.evaluate', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        )
+        assert result.returncode == 0
+        assert 'usage' in result.stdout.lower() or 'evaluate' in result.stdout.lower()
+    
+    def test_batch_help(self):
+        """batch.py should have help documentation."""
+        result = subprocess.run(
+            [sys.executable, '-m', 'malvec.cli.batch', '--help'],
+            capture_output=True,
+            text=True,
+            cwd=os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        )
+        assert result.returncode == 0
+        assert 'usage' in result.stdout.lower() or 'batch' in result.stdout.lower()
 
 
 class TestTrainCLI:
