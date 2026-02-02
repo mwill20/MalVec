@@ -82,6 +82,51 @@
 
 ---
 
+## Lesson: Test Markers Distinguish Data Requirements
+
+**Date:** 2026-02-01  
+**Context:** Phase 2 review revealed synthetic vs real data distinction needed  
+**Problem:** Tests pass with synthetic but haven't proven real EMBER works  
+**Solution:** Add `@pytest.mark.real_data` marker for tests requiring actual dataset  
+**Impact:** CI can run fast (synthetic), pre-release runs full suite (real)  
+**Takeaway:** Make implicit data dependencies explicit through test markers.
+
+---
+
+## Lesson: Validation Checkpoints Catch Honest Gaps
+
+**Date:** 2026-02-01  
+**Context:** Phase 2→3 transition review  
+**Problem:** Easy to say "done" without proving all paths work  
+**Solution:** Provide brutally honest assessment when asked for validation  
+**Impact:** Conditions set (download EMBER before Phase 5) before they become blockers  
+**Takeaway:** Honesty about limitations is more valuable than false confidence.
+
+---
+
+## Lesson: Johnson-Lindenstrauss Saves the Day
+
+**Date:** 2026-02-01  
+**Context:** Need to reduce 2381 EMBER dimensions for embedding  
+**Problem:** 2381 dims is too large for efficient transformer processing  
+**Solution:** Random orthogonal projection (JL lemma) preserves distances  
+**Impact:** Simple matrix multiply reduces dims while preserving structure  
+**Takeaway:** Sometimes random is good enough - JL guarantees distance preservation with random projection.
+
+---
+
+## Lesson: Numeric Features Need Text Bridge
+
+**Date:** 2026-02-01  
+**Context:** Sentence-transformers expect text, we have numeric features  
+**Problem:** Can't directly feed float arrays to transformer models  
+**Solution:** Project first (2381→384), then sample features as text  
+**Trade-off:** Loses some precision but gains semantic patterns  
+**Alternative:** Train custom encoder (more work, potentially better quality)  
+**Takeaway:** Adapt the data to the tool, or adapt the tool to the data - choose based on effort.
+
+---
+
 ## Template for Future Lessons
 
 ```markdown

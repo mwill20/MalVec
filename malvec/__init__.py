@@ -25,8 +25,13 @@ __author__ = "MalVec Team"
 # Phase 2: EMBER loader
 from malvec import ember_loader
 
+# Phase 3: Embedding generator
+from malvec import embedder
+
 __all__ = [
     "__version__",
     "__author__",
     "ember_loader",
+    "embedder",
 ]
+
