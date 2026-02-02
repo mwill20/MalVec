@@ -17,14 +17,11 @@ python -m venv venv
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Download EMBER dataset
-python -c "import ember; print('EMBER installed!')"
+# 3. Train MalVec (with synthetic data for demo)
+python -m malvec.cli.train --output ./model --max-samples 1000
 
-# 4. Train MalVec (coming soon)
-python scripts/train.py --data ./data/ember2018/
-
-# 5. Classify a sample (coming soon)
-python scripts/classify.py --sample-id 12345
+# 4. Classify a file
+python -m malvec.cli.classify --model ./model --file ./path/to/suspect_file.exe
 ```
 
 ---
@@ -91,12 +88,13 @@ malvec/
 │   ├── unit/
 │   ├── integration/
 │   └── e2e/
-├── scripts/              # CLI tools
+├── malvec/cli/           # CLI tools
 │   ├── train.py
 │   ├── classify.py
-│   └── visualize.py
+│   └── batch.py
 ├── docs/                 # Documentation
 │   ├── PRODUCT_VISION.md
+│   ├── Phase7_Handover.md
 │   └── lessons_learned.md
 ├── research/             # Jupyter notebooks
 └── data/                 # Gitignored!
@@ -109,19 +107,19 @@ malvec/
 
 ## 📊 Development Status
 
-**Phase 1: Project Foundation** ✅ Complete
+**Phase 1-6:** Core Infrastructure ✅ Complete
+**Phase 7:** Input Validation & Binary Pipeline ✅ Complete
 
-- [x] Repository structure
-- [x] Dependencies (requirements.txt)
-- [x] Setup script
-- [x] Git initialization
-- [x] Virtual environment
+- [x] Input Validator (DoS protection)
+- [x] Native Feature Extractor (LIEF)
+- [x] CLI support for real binaries
+- [x] End-to-End verification
 
-**Phase 2: EMBER Integration** 🔄 Next
+**Phase 8:** Security Hardening 🔄 Next
 
-- [ ] Download EMBER dataset
-- [ ] Create EMBER loader
-- [ ] Verify feature format
+- [ ] Process isolation
+- [ ] Resource limits
+- [ ] Sandbox implementation
 
 ---
 
