@@ -21,11 +21,10 @@ setup(
     description="Malware detection via embedding-space analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/malvec",
+    url="https://github.com/mwill20/MalVec",
     packages=find_packages(exclude=["tests", "tests.*", "research", "scripts"]),
     python_requires=">=3.11",
     install_requires=[
-        "ember-ml>=0.1.0",
         "sentence-transformers>=2.2.0",
         "torch>=2.0.0",
         "faiss-cpu>=1.7.4",
@@ -34,11 +33,18 @@ setup(
         "pandas>=2.0.0",
         "pefile>=2023.2.7",
         "lief>=0.13.0",
+        "rich>=10.0.0",
+        "pyyaml>=5.4.0",
     ],
     extras_require={
         "dev": [
             "pytest>=7.4.0",
             "pytest-cov>=4.1.0",
+            "ruff>=0.4.0",
+            "mypy>=1.10.0",
+            "types-PyYAML>=6.0.0",
+            "pre-commit>=3.5.0",
+            "pip-audit>=2.6.0",
         ],
         "viz": [
             "matplotlib>=3.7.0",
@@ -47,9 +53,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "malvec-train=scripts.train:main",
-            "malvec-classify=scripts.classify:main",
-            "malvec-visualize=scripts.visualize:main",
+            "malvec-train=malvec.cli.train:main",
+            "malvec-classify=malvec.cli.classify:main",
         ],
     },
     classifiers=[

@@ -44,13 +44,14 @@ env/
 *~
 
 # ====================
-# Testing
+# Testing & Coverage
 # ====================
 .coverage
 .pytest_cache/
 htmlcov/
 .tox/
 .nox/
+coverage.xml
 
 # ====================
 # DATA - CRITICAL: Never commit samples!
@@ -98,6 +99,17 @@ nul
 logs/
 debug_*.py
 output.log
+
+# ====================
+# Linting & Type Checking
+# ====================
+.mypy_cache/
+.ruff_cache/
+
+# ====================
+# Docker
+# ====================
+docker-compose.override.yml
 
 # ====================
 # Claude Code / AI Tooling

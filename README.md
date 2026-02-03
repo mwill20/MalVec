@@ -4,9 +4,10 @@
 
 Traditional antivirus relies on exact-match signatures. An attacker changes one byte, and the signature fails. MalVec takes a different approach: it converts executables into mathematical fingerprints and classifies them by *similarity* to known threats. Change a few bytes? The fingerprint barely moves. The malware is still caught.
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]()
-[![Python](https://img.shields.io/badge/python-3.11+-blue)]()
-[![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![CI](https://github.com/mwill20/MalVec/actions/workflows/ci.yml/badge.svg)](https://github.com/mwill20/MalVec/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 ---
 
@@ -40,8 +41,8 @@ PE Binary → Feature Extraction → Embedding → K-NN Search → Verdict
 ### Install
 
 ```bash
-git clone https://github.com/yourusername/malvec
-cd malvec
+git clone https://github.com/mwill20/MalVec.git
+cd MalVec
 python -m venv venv && source venv/bin/activate  # or .\venv\Scripts\activate on Windows
 pip install -r requirements.txt
 pip install -e .
@@ -159,7 +160,7 @@ export MALVEC_TIMEOUT=60
 ## Project Structure
 
 ```
-malvec/
+MalVec/
 ├── malvec/                 # Core package
 │   ├── classifier.py       # K-NN classification
 │   ├── embedder.py         # JL random projection
@@ -176,9 +177,15 @@ malvec/
 ├── tests/                  # Unit, security, integration, polish
 ├── docs/                   # User guide, security, deployment, API
 ├── lessons/                # Educational content (novice + professional tracks)
-├── requirements.txt
-├── setup.py
-└── pytest.ini
+├── data/                   # Data directory (see data/README.md)
+├── .github/                # CI, issue templates, PR template, Dependabot
+├── requirements.txt        # Runtime dependencies
+├── requirements-dev.txt    # Development dependencies
+├── pyproject.toml          # Tool configuration (ruff, mypy, coverage)
+├── setup.py                # Package metadata
+├── Makefile                # Development shortcuts
+├── Dockerfile              # Container build
+└── pytest.ini              # Test configuration
 ```
 
 ---
@@ -219,15 +226,35 @@ Optional: `rich` (terminal UX), `pyyaml` (config files)
 ## Development
 
 ```bash
+# Install dev dependencies
+pip install -r requirements-dev.txt
+pre-commit install
+
 # Run all tests
-pytest tests/ -v
+make test
 
-# Security tests
-pytest tests/security/ -v
+# Run with coverage
+make test-coverage
 
-# With coverage
-pytest tests/ --cov=malvec --cov-report=html
+# Lint and format
+make lint
+make format
+
+# Type checking
+make typecheck
+
+# Run everything pre-commit checks
+make pre-commit
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
+
+---
+
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions,
+coding standards, and the PR process. All contributors must follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
 
