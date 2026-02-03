@@ -1,13 +1,20 @@
-# MalVec
+<p align="center">
+  <img src="docs/MalVec.png" alt="MalVec Logo" width="300">
+</p>
 
-**Signature-based antivirus misses 40% of malware variants. MalVec catches them.**
+<h1 align="center">MalVec</h1>
+
+<p align="center"><strong>Signature-based antivirus misses 40% of malware variants. MalVec catches them.</strong></p>
+
+<p align="center">
+  <a href="https://github.com/mwill20/MalVec/actions/workflows/ci.yml"><img src="https://github.com/mwill20/MalVec/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/mwill20/MalVec"><img src="https://codecov.io/gh/mwill20/MalVec/branch/master/graph/badge.svg" alt="Coverage"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-000000.svg" alt="Code style: ruff"></a>
+</p>
 
 Traditional antivirus relies on exact-match signatures. An attacker changes one byte, and the signature fails. MalVec takes a different approach: it converts executables into mathematical fingerprints and classifies them by *similarity* to known threats. Change a few bytes? The fingerprint barely moves. The malware is still caught.
-
-[![CI](https://github.com/mwill20/MalVec/actions/workflows/ci.yml/badge.svg)](https://github.com/mwill20/MalVec/actions/workflows/ci.yml)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 ---
 
@@ -194,10 +201,12 @@ MalVec/
 
 | Document | Contents |
 |----------|----------|
+| [Architecture](docs/ARCHITECTURE.md) | System design, data flow, component details, design decisions |
 | [User Guide](docs/USER_GUIDE.md) | Installation, training, classification, batch processing, troubleshooting |
 | [Security](docs/SECURITY.md) | Threat model, defense-in-depth layers, audit log format |
 | [Deployment](docs/DEPLOYMENT.md) | Docker, Kubernetes, systemd, monitoring, backup |
 | [API Reference](docs/API.md) | Full Python API with examples |
+| [Roadmap](ROADMAP.md) | Planned features and research directions |
 
 ---
 
