@@ -9,12 +9,18 @@ Usage:
 
 Output:
     Prediction, confidence, and review recommendation.
+
+Security:
+- All classifications are audit logged
+- Feature extraction runs in sandboxed subprocess
+- Validation failures and errors are logged
 """
 
 import argparse
 import sys
 import os
 import json
+import time
 import numpy as np
 from pathlib import Path
 
@@ -126,6 +132,12 @@ def load_model(model_path: Path):
     return clf, meta
 
 
+def _extract_proxy(file_path):
+    """Proxy for run_isolated to handle imports and instantiation in worker process."""
+    from malvec.extractor import FeatureExtractor
+    extractor = FeatureExtractor()
+    return extractor.extract(file_path)
+
 def main():
     """Main classification function."""
     args = parse_args()
@@ -140,32 +152,67 @@ def main():
         return 1
     
     from malvec.embedder import EmbeddingGenerator, EmbeddingConfig
+    from malvec.isolation import run_isolated
     
     embedding = None
     true_label = None
     sample_identifier = None
     
+    # Initialize audit logger
+    from malvec.audit import AuditLogger, AuditConfig
+    audit_config = AuditConfig()
+    audit = AuditLogger(audit_config)
+
     # CASE 1: Real File Classification
     if args.file:
         from malvec.validator import InputValidator
         from malvec.extractor import FeatureExtractor
-        
+        from malvec.sandbox import SandboxConfig, SandboxViolation
+
         sample_identifier = args.file
+        file_path = None
+        start_time = time.time()
+
         try:
             # Validate
             file_path = InputValidator.validate(args.file)
-            
-            # Extract
+
+            # Extract with sandboxing
             print(f"Extracting features from {file_path.name}...", file=sys.stderr)
-            extractor = FeatureExtractor()
-            raw_features = extractor.extract(file_path) # Returns np.array(2381,)
-            
+
+            sandbox_config = SandboxConfig(timeout=30, max_memory=512 * 1024 * 1024)
+            extractor = FeatureExtractor(sandbox=True, config=sandbox_config)
+
+            try:
+                raw_features = extractor.extract(file_path)
+            except SandboxViolation as e:
+                processing_time = time.time() - start_time
+                audit.log_sandbox_violation(
+                    file_path,
+                    str(e),
+                    violation_type=e.violation_type
+                )
+                print(f"Error: {e}", file=sys.stderr)
+                return 1
+
             # Embed
             config = EmbeddingConfig(embedding_dim=meta['embedding_dim'], normalize=True)
             generator = EmbeddingGenerator(config)
             embedding = generator.generate(raw_features)
-            
+
         except Exception as e:
+            processing_time = time.time() - start_time
+            if file_path:
+                # Log validation or processing failure
+                if "validation" in str(type(e).__name__).lower() or "invalid" in str(e).lower():
+                    audit.log_validation_failure(file_path, str(e))
+                else:
+                    audit.log_processing_error(
+                        file_path,
+                        str(e),
+                        error_type=type(e).__name__,
+                        stage="feature_extraction"
+                    )
             print(f"Error processing file: {e}", file=sys.stderr)
             import traceback
             traceback.print_exc()
@@ -198,11 +245,22 @@ def main():
     
     # Classify
     result = clf.predict_with_review(embedding)
-    
+
     prediction = result['predictions'][0]
     confidence = result['confidences'][0]
     needs_review = result['needs_review'][0]
-    
+
+    # Log classification result for real files
+    if args.file and file_path:
+        processing_time = time.time() - start_time
+        audit.log_classification(
+            file_path,
+            "MALWARE" if prediction == 1 else "BENIGN",
+            float(confidence),
+            processing_time,
+            needs_review=bool(needs_review)
+        )
+
     # Prepare output
     output = {
         'sample': sample_identifier,

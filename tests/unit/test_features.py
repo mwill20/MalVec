@@ -24,12 +24,13 @@ class TestFeatureExtractor:
 
     def test_initialization(self):
         """Should initialize with correct dimension."""
-        extractor = FeatureExtractor()
+        extractor = FeatureExtractor(sandbox=False)
         assert extractor.dim == 2381
 
     def test_extract_real_binary(self, real_pe_file):
         """Should extract features from a real system binary."""
-        extractor = FeatureExtractor()
+        # Use sandbox=False for unit tests (faster, doesn't need isolation)
+        extractor = FeatureExtractor(sandbox=False)
         features = extractor.extract(real_pe_file)
         
         # Verify shape
@@ -58,8 +59,9 @@ class TestFeatureExtractor:
         # Create a file that is NOT a PE (just text)
         f = tmp_path / "text.txt"
         f.write_text("This is not a PE file.")
-        
-        extractor = FeatureExtractor()
+
+        # Use sandbox=False for unit tests (faster)
+        extractor = FeatureExtractor(sandbox=False)
         
         # LIEF might return None or partial, or raise error.
         # Our implementation catches LIEF errors and prints, returns None potentially?
@@ -78,6 +80,7 @@ class TestFeatureExtractor:
 
     def test_nonexistent_file(self):
         """Should raise error for missing file."""
-        extractor = FeatureExtractor()
+        # Use sandbox=False for unit tests (faster)
+        extractor = FeatureExtractor(sandbox=False)
         with pytest.raises(FileNotFoundError):
             extractor.extract("nonexistent_ghost_file.exe")

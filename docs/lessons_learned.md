@@ -106,12 +106,12 @@
 
 ## Lesson: Johnson-Lindenstrauss Saves the Day
 
-**Date:** 2026-02-01  
-**Context:** Need to reduce 2381 EMBER dimensions for embedding  
-**Problem:** 2381 dims is too large for efficient transformer processing  
-**Solution:** Random orthogonal projection (JL lemma) preserves distances  
-**Impact:** Simple matrix multiply reduces dims while preserving structure  
-**Takeaway:** Sometimes random is good enough - JL guarantees distance preservation with random projection.
+**Date:** 2026-02-01
+**Context:** Need to reduce 2381 EMBER dimensions for embedding
+**Problem:** 2381 dims is too large for efficient processing
+**Solution:** Gaussian random projection (JL lemma) preserves distances
+**Impact:** Simple matrix multiply reduces dims while preserving structure
+**Takeaway:** Sometimes random is good enough - JL guarantees distance preservation with Gaussian random projection.
 
 ---
 
@@ -123,13 +123,13 @@
 **Why It Was Wrong:**
 
 - Transformers tokenize "0.123" as a word, not a numeric value
-- Only sampled 48 of 384 features (88% information loss)
+- Only sampled 48 of 2381 EMBER features (98% information loss) to fit in text context
 - Spearman correlation with original distances: ~0.30 (garbage)
 
 **Correct Approach:** Use sklearn.GaussianRandomProjection
 
 - Proper JL lemma implementation with correct scaling
-- Uses ALL features (no sampling)
+- Uses ALL 2381 EMBER features (no sampling)
 - Spearman correlation: >0.98 (excellent)
 
 **Lesson:** Never use text models for numeric data. If it's numbers, use numeric methods.
@@ -172,7 +172,7 @@ to what we would have built if we'd overthought it initially.
 
 | Metric | v1 (broken) | v2 (fixed) |
 |--------|-------------|------------|
-| Features used | 48/384 (12%) | 2381/2381 (100%) |
+| EMBER features used | 48/2381 (2%) | 2381/2381 (100%) |
 | Spearman | ~0.30 | >0.98 |
 | Lines | ~200 | ~100 |
 

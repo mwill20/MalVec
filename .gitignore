@@ -61,7 +61,6 @@ data/models/
 *.exe
 *.dll
 *.elf
-*.so
 *.bin
 
 # EMBER dataset (large files)
@@ -85,6 +84,7 @@ credentials/
 .DS_Store
 Thumbs.db
 desktop.ini
+nul
 
 # ====================
 # Jupyter Notebooks (checkpoints)
@@ -92,7 +92,26 @@ desktop.ini
 .ipynb_checkpoints/
 
 # ====================
-# Logs
+# Logs & Debug Artifacts
 # ====================
 *.log
 logs/
+debug_*.py
+output.log
+
+# ====================
+# Claude Code / AI Tooling
+# ====================
+.claude/
+
+# ====================
+# Internal Planning Docs
+# (moved to docs/internal/, gitignored)
+# ====================
+docs/internal/
+
+# ====================
+# Temp / Scratch Directories
+# ====================
+test_phase8/
+research/

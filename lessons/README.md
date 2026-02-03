@@ -13,6 +13,7 @@
 
 | # | Lesson | Phase | Status |
 |---|--------|-------|--------|
+| 00 | [What Is MalVec?](novice/lesson_00_what_is_malvec.md) | 0 | ✅ Complete |
 | 01 | [Project Foundation](novice/lesson_01_project_foundation.md) | 1 | ✅ Complete |
 | 02 | [EMBER Dataset Integration](novice/lesson_02_ember_integration.md) | 2 | ✅ Complete |
 | 03 | [Embedding Generation](novice/lesson_03_embedding_generation.md) | 3 | ✅ Complete |
@@ -32,6 +33,7 @@
 
 | # | Lesson | Phase | Status |
 |---|--------|-------|--------|
+| 00 | [MalVec in Context](professional/lesson_00_malvec_in_context.md) | 0 | ✅ Complete |
 | 01 | [Production Architecture](professional/lesson_01_production_architecture.md) | 1 | ✅ Complete |
 | 02 | [EMBER Integration & Feature Engineering](professional/lesson_02_ember_feature_engineering.md) | 2 | ✅ Complete |
 | 03 | [Embedding Model Selection & Architecture](professional/lesson_03_embedding_architecture.md) | 3 | ✅ Complete |

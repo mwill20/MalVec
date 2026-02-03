@@ -15,13 +15,25 @@ Based on EMBER 2.0 feature set:
 - Exports Info (128)
 - Data Directories (30)
 Total: 2381 dimensions
+
+Security:
+- Feature extraction runs in sandboxed subprocess
+- Timeout enforcement (default 30s)
+- Memory limits (default 512MB)
+- Crash isolation protects main process
 """
 
 import re
 import lief
 import hashlib
 import numpy as np
+from pathlib import Path
+from typing import Optional, Union
 from sklearn.feature_extraction import FeatureHasher
+
+from malvec.sandbox import SandboxConfig, SandboxContext, SandboxViolation
+
+# ... (FeatureType classes) ...
 
 class FeatureType:
     """Base class for feature extractors."""
@@ -331,24 +343,115 @@ class DataDirectories(FeatureType):
         return features
 
 class FeatureExtractor:
-    """Extracts EMBERv2 features from PE files."""
-    
-    def __init__(self):
+    """
+    Extracts EMBERv2 features from PE files.
+
+    Security Features:
+    - Optional sandboxed extraction (recommended for untrusted files)
+    - Timeout enforcement (default 30s)
+    - Memory limits (default 512MB)
+    - Crash isolation protects main process
+
+    Usage:
+        # With sandboxing (recommended for untrusted files)
+        extractor = FeatureExtractor(sandbox=True)
+        features = extractor.extract(file_path)
+
+        # Without sandboxing (for trusted files only)
+        extractor = FeatureExtractor(sandbox=False)
+        features = extractor.extract(file_path)
+    """
+
+    def __init__(
+        self,
+        sandbox: bool = True,
+        config: SandboxConfig = None
+    ):
+        """
+        Initialize feature extractor.
+
+        Args:
+            sandbox: Enable sandboxed extraction (recommended).
+            config: Sandbox configuration. Uses defaults if not provided.
+        """
         self.features = [
             ByteHistogram(), ByteEntropyHistogram(), StringExtractor(),
             GeneralFileInfo(), HeaderFileInfo(), SectionInfo(),
             ImportsInfo(), ExportsInfo(), DataDirectories()
         ]
-        self.dim = sum(f.dim for f in self.features) # Should be 2381
+        self.dim = sum(f.dim for f in self.features)  # Should be 2381
+        self.sandbox_enabled = sandbox
+        self.sandbox_config = config or SandboxConfig()
 
-    def extract(self, file_path):
+    def extract(self, file_path: Union[str, Path]) -> np.ndarray:
+        """
+        Extract features from a PE file.
+
+        If sandboxing is enabled, runs extraction in isolated subprocess
+        with timeout and memory limits.
+
+        Args:
+            file_path: Path to PE file.
+
+        Returns:
+            np.ndarray: Feature vector of shape (2381,).
+
+        Raises:
+            SandboxViolation: If sandbox constraints are violated.
+            RuntimeError: If extraction fails.
+            FileNotFoundError: If file doesn't exist.
+        """
+        file_path = Path(file_path)
+
+        if self.sandbox_enabled:
+            return self._extract_sandboxed(file_path)
+        else:
+            return self._extract_impl(file_path)
+
+    def _extract_sandboxed(self, file_path: Path) -> np.ndarray:
+        """
+        Run extraction in sandboxed subprocess.
+
+        Args:
+            file_path: Path to PE file.
+
+        Returns:
+            Feature vector.
+
+        Raises:
+            SandboxViolation: On timeout, memory limit, or crash.
+        """
+        with SandboxContext(self.sandbox_config) as sandbox:
+            # Validate file before processing
+            sandbox.validate_file(file_path)
+
+            try:
+                # Run extraction in isolated process
+                features = sandbox.run(extract_in_process, file_path)
+                return features
+            except SandboxViolation:
+                raise
+            except Exception as e:
+                raise RuntimeError(f"Feature extraction failed: {e}") from e
+
+    def _extract_impl(self, file_path: Path) -> np.ndarray:
+        """
+        Actual extraction implementation (may run in sandbox).
+
+        Args:
+            file_path: Path to PE file.
+
+        Returns:
+            Feature vector of shape (2381,).
+        """
         with open(file_path, 'rb') as f:
             bytez = f.read()
 
         try:
-            lief_binary = lief.PE.parse(list(bytez))
+            # Use file_path directly for speed and memory efficiency
+            lief_binary = lief.PE.parse(str(file_path))
         except (lief.bad_format, lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
-            print(f"LIEF parsing failed: {e}")
+            # Log but continue with fallback (bytez-only features)
             lief_binary = None
         except Exception:
             raise
@@ -358,5 +461,24 @@ class FeatureExtractor:
             raw = feature.raw_features(bytez, lief_binary)
             vec = feature.process_raw_features(raw)
             feature_vectors.append(vec)
-            
+
         return np.hstack(feature_vectors).astype(np.float32)
+
+def extract_in_process(file_path):
+    """
+    Helper function to be used with isolation.run_isolated.
+    Instantiates the FeatureExtractor and extracts features.
+
+    This function is designed to run in an isolated subprocess.
+    It creates a non-sandboxed extractor since the sandbox
+    context handles the isolation.
+
+    Args:
+        file_path: Path to the PE file.
+
+    Returns:
+        np.ndarray: Extracted features.
+    """
+    # Create extractor WITHOUT sandboxing since we're already in sandbox
+    extractor = FeatureExtractor(sandbox=False)
+    return extractor._extract_impl(file_path)

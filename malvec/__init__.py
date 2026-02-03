@@ -34,6 +34,15 @@ from malvec import vector_store
 # Phase 5: K-NN Classifier
 from malvec import classifier
 
+# Phase 7: Feature Extraction & Validation
+from malvec import extractor
+from malvec import validator
+
+# Phase 8: Security Hardening
+from malvec import sandbox
+from malvec import isolation
+from malvec import audit
+
 __all__ = [
     "__version__",
     "__author__",
@@ -41,5 +50,10 @@ __all__ = [
     "embedder",
     "vector_store",
     "classifier",
+    "extractor",
+    "validator",
+    "sandbox",
+    "isolation",
+    "audit",
 ]
 
