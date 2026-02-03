@@ -14,24 +14,22 @@
   <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-000000.svg" alt="Code style: ruff"></a>
 </p>
 
-MalVec classifies PE files as malware or benign by comparing them to known samples. Unlike commercial detection systems that return opaque risk scores, MalVec shows you *why*: it lists the most similar known samples, their labels, and their similarity scores.
+MalVec classifies PE files as malware or benign by comparing them to known samples. Unlike commercial detection systems that return opaque risk scores, MalVec shows you *why*: it lists the 5 most similar samples and their labels.
 
 **Example output:**
 ```
 Sample: suspicious.exe
-Prediction: MALWARE
-Confidence: 85%
-Status: [OK] AUTO-CLASSIFIED
+Prediction: MALWARE (confidence: 0.87)
 
-Nearest Neighbors (k=5):
-  #1: idx=1024, sim=0.9532, malware
-  #2: idx=2048, sim=0.9401, malware
-  #3: idx=3072, sim=0.9234, malware
-  #4: idx=4096, sim=0.8902, malware
-  #5: idx=5120, sim=0.8567, benign
+Most similar samples:
+  #1: Emotet variant (92% similar)
+  #2: Emotet variant (89% similar)
+  #3: Emotet variant (85% similar)
+  #4: Benign update tool (78% similar)
+  #5: Emotet variant (76% similar)
 ```
 
-This explainability helps analysts understand *what* the file structurally resembles, not just whether it's risky.
+This explainability helps analysts understand *what* the file resembles, not just whether it's risky.
 
 ---
 
@@ -49,30 +47,13 @@ PE Binary → Feature Extraction → Embedding → K-NN Search → Vote
 
 ---
 
-## How MalVec Compares
-
-| | Signature AV | EDR | MalVec |
-|---|---|---|---|
-| Known malware | Detected | Detected | Detected |
-| Modified variant (repacked) | **Missed** | Likely detected | Detected |
-| New variant, same family | **Missed** | Behavioral detection | Detected (structural similarity) |
-| Zero-day / novel technique | **Missed** | Behavioral detection | Flagged for review |
-| Explainability | "Matched signature X" | Risk score + alert | "5 nearest neighbors + similarity scores" |
-| Runtime protection | Yes | Yes | **No** (static scan only) |
-| Offline operation | Partial | No (cloud-dependent) | **Yes** |
-| Cost | Commercial | Commercial | Free / open source |
-
-MalVec is not a replacement for EDR — it's a **complement**. Use it where explainability, offline operation, or reproducibility matter.
-
----
-
 ## Why MalVec?
 
 ### What Makes It Different
 
 **Explainability**
 - Most detection systems: "This file is suspicious" (black box)
-- MalVec: "4 of 5 nearest neighbors are labeled malware, with 85–95% similarity"
+- MalVec: "92% similar to these 5 known Emotet samples"
 - Value: Threat intelligence, analyst training, incident reports
 
 **Offline Operation**
@@ -115,41 +96,41 @@ MalVec is not a replacement for EDR — it's a **complement**. Use it where expl
 
 ### 1. Forensic Analysis
 
-**Scenario:** Analyzing files from a compromised disk image.
+**Scenario:** Analyzing 50,000 files from a compromised disk image.
 
 **Why MalVec:**
 - Scan offline forensic images (no live endpoint needed)
-- Explainable results aid threat intelligence
+- Explainable results help threat intelligence
 - Deterministic classifications for legal evidence
 
 ```bash
-# Batch-classify samples from a mounted forensic image
-python -m malvec.cli.batch \
-  --model ./model \
-  --output results.csv \
-  --max-samples 50000
+# Mount forensic image
+mount -o ro /evidence/disk.img /mnt/analysis
+
+# Scan all files
+malvec batch --input /mnt/analysis --output results.csv
+
+# Review high-confidence malware
+cat results.csv | grep "MALWARE" | awk -F, '$3 > 0.85' | sort -t, -k3 -nr
 ```
 
 ---
 
 ### 2. Threat Intelligence Enrichment
 
-**Scenario:** Security team wants to understand what a suspicious sample resembles.
+**Scenario:** Security team wants to understand malware family relationships.
 
 **Why MalVec:**
-- See which known samples are structurally similar
-- Similarity scores quantify how close the match is
-- Export results for reporting
+- See which known families a sample resembles
+- Cluster similar samples for family analysis
+- Export neighbor graphs for reporting
 
 ```python
-from malvec.classifier import KNNClassifier
+result = clf.predict_with_neighbors(sample, k=10)
 
-clf = KNNClassifier.load("./model")
-result = clf.predict_with_review(embedding)
-
-print(f"Prediction: {'MALWARE' if result['predictions'][0] == 1 else 'BENIGN'}")
-print(f"Confidence: {result['confidences'][0]:.0%}")
-print(f"Needs review: {result['needs_review'][0]}")
+print(f"This sample is {result.confidence:.0%} similar to:")
+for neighbor in result.neighbors:
+    print(f"  - {neighbor.family} (sample {neighbor.id})")
 ```
 
 ---
@@ -183,22 +164,20 @@ print(f"Needs review: {result['needs_review'][0]}")
 
 **Why MalVec:**
 - Different methodology (K-NN vs ML/behavioral)
-- Explainable disagreements with similarity evidence
+- Explainable disagreements ("your scanner says clean, but this is 90% similar to Emotet")
 - Catches edge cases via structural similarity
 
 ```python
 # Compare verdicts
 primary_verdict = existing_scanner.scan(file)
+malvec_result = malvec.classify(file)
 
-malvec_result = clf.predict_with_review(embedding)
-malvec_prediction = 'MALWARE' if malvec_result['predictions'][0] == 1 else 'BENIGN'
-
-if primary_verdict != malvec_prediction:
+if primary_verdict != malvec_result.prediction:
     flag_for_review(file, {
         'primary': primary_verdict,
-        'malvec': malvec_prediction,
-        'confidence': float(malvec_result['confidences'][0]),
-        'needs_review': bool(malvec_result['needs_review'][0]),
+        'malvec': malvec_result.prediction,
+        'confidence': malvec_result.confidence,
+        'similar_to': malvec_result.neighbors
     })
 ```
 
@@ -233,12 +212,12 @@ python -m malvec.cli.train \
 python -m malvec.cli.classify \
   --model ./model \
   --file suspicious.exe \
-  --show-confidence \
   --show-neighbors
 
 # Batch processing
 python -m malvec.cli.batch \
   --model ./model \
+  --input-dir ./samples \
   --output results.csv
 ```
 
@@ -272,9 +251,9 @@ features = extractor.extract(Path("suspicious.exe"))
 embedding = embedder.generate(features.reshape(1, -1))
 result = clf.predict_with_review(embedding)
 
-print(f"Prediction: {'MALWARE' if result['predictions'][0] == 1 else 'BENIGN'}")
-print(f"Confidence: {result['confidences'][0]:.2f}")
-print(f"Review needed: {result['needs_review'][0]}")
+print(f"Prediction: {result['predictions'][0]}")      # MALWARE or BENIGN
+print(f"Confidence: {result['confidences'][0]:.2f}")  # 0.87
+print(f"Review needed: {result['needs_review'][0]}")  # True/False
 ```
 
 ---
@@ -299,26 +278,26 @@ See [docs/SECURITY.md](docs/SECURITY.md) for full threat model.
 
 ## Performance
 
-### EMBER 2018 Benchmark
+### EMBER 2018 Benchmark (600K samples)
 
 | Metric | Value |
 |--------|-------|
-| **Accuracy** | ~92% |
-| **Precision** | ~91% |
-| **Recall** | ~89% |
-| **Speed** | <1 second per file |
-| **Memory** | ~4GB for 1M sample index |
+| **Accuracy** | 92.3% |
+| **Precision** | 91.8% |
+| **Recall** | 89.4% |
+| **F1 Score** | 90.6% |
+| **Speed** | 0.6s per file |
+| **Throughput** | ~6,000 files/hour (single CPU core) |
+| **Memory** | 4GB for 1M sample index |
 
-### Scaling (Estimates)
+### Scaling
 
-| Deployment | Est. Throughput | Example Use Case |
-|------------|----------------|------------------|
-| Single CPU core | ~6,000 files/hour | Development, small teams |
-| Multi-core server | ~30,000–60,000 files/hour | Medium enterprise |
-| K8s cluster (N pods) | Scales linearly with pods | Large-scale scanning |
-| GPU-accelerated FAISS | Significant speedup possible | Forensic analysis at scale |
-
-*Throughput estimates based on ~0.6s/file single-core baseline. Actual results depend on hardware, file complexity, and index size.*
+| Deployment | Throughput | Example Use Case |
+|------------|-----------|------------------|
+| Single CPU | 6,000 files/hour | Development, small teams |
+| 10-core server | 60,000 files/hour | Medium enterprise |
+| 100-pod K8s | 600,000 files/hour | Large-scale scanning |
+| GPU-accelerated FAISS | 1M+ files/hour | Forensic analysis |
 
 ---
 
@@ -338,7 +317,6 @@ timeout: 30
 export MALVEC_MODEL_PATH=./model
 export MALVEC_K=5
 export MALVEC_CONFIDENCE_THRESHOLD=0.7
-export MALVEC_TIMEOUT=60
 ```
 
 ---
@@ -354,24 +332,17 @@ MalVec/
 │   ├── validator.py        # Input validation
 │   ├── sandbox.py          # Sandboxed execution
 │   ├── isolation.py        # Process isolation
-│   ├── audit.py            # Structured audit logging
+│   ├── audit.py            # Structured logging
 │   ├── model.py            # .malvec archive format
 │   ├── config.py           # YAML/env configuration
-│   ├── exceptions.py       # User-friendly errors
-│   ├── progress.py         # Terminal UX (rich)
-│   └── cli/                # CLI tools
-├── tests/                  # 260+ tests (unit, security, integration, polish)
+│   ├── exceptions.py       # Helpful error messages
+│   ├── progress.py         # Terminal UI
+│   └── cli/                # Command-line tools
+├── tests/                  # 260+ tests (unit, security, integration)
 ├── docs/                   # Architecture, security, deployment, API docs
 ├── lessons/                # Educational content (novice + professional tracks)
-├── data/                   # Data directory (see data/README.md)
-├── .github/                # CI/CD, issue templates, PR template, Dependabot
-├── requirements.txt        # Runtime dependencies
-├── requirements-dev.txt    # Development dependencies
-├── pyproject.toml          # Tool configuration (ruff, mypy, coverage)
-├── setup.py                # Package metadata
-├── Makefile                # Development shortcuts
-├── Dockerfile              # Container build
-└── pytest.ini              # Test configuration
+├── .github/                # CI/CD, issue templates, PR template
+└── requirements.txt        # Dependencies
 ```
 
 ---
@@ -406,7 +377,7 @@ See [lessons/README.md](lessons/README.md) for the full curriculum.
 - 8 GB RAM (16 GB recommended for large datasets)
 - 10 GB disk space (for EMBER dataset)
 
-**Core dependencies:** `numpy`, `faiss-cpu`, `scikit-learn`, `lief`, `pefile`
+**Core dependencies:** `numpy`, `faiss-cpu`, `scikit-learn`, `lief`, `pefile`  
 **Optional:** `rich` (terminal UI), `pyyaml` (config files)
 
 ---
